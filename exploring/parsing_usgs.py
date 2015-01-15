@@ -8,125 +8,55 @@ import re
 import time
 import datetime
 import cPickle as pickle
-class Record:
-    def __init__(self, line ):
-        item_set    = line.split('\t')
-        self.agency_id   = item_set[0]
-        self.site_num    = item_set[1]
-        self.sample_date = item_set[2]
-        self.sample_hours= item_set[3]
-        self.complete_date= item_set[2]+item_set[3]
-        
-        
-        
+import dateutil.parser
+       
+## plotting stuff ##
+import matplotlib.pyplot as plt
+import matplotlib
+import matplotlib.dates as md
+import math
+def plotting_one_ts(x,y,ylabel = 'ylabel', path2save=None):
+    f= figure()
+    plt.xticks(rotation = 60)
+    ax   = plt.gca()
+    xfmt = md.DateFormatter('%Y-%m-%d')
+    ax.xaxis.set_major_formatter(xfmt)
+    plt.gcf().subplots_adjust(bottom = 0.3)
+    plt.ylabel(ylabel)
+    plt.scatter(x,y)
+    if path2save != None:
+        plt.savefig(path2save, format='pdf')
 
-
-class ob_Site:
-    def __init__(self, site_name = '', site_no = ''):
-        self.site_no   = site_no
-        self.site_name = site_name
-    def get_site_name(self):
-        return self.site_name
-    def get_site_no(self):
-        return self.site_no
-        
-def get_site_no_mapping(filename):
-    Flag  = True
-    all_sites = list()
-    for oneline in open(filename,'r'):
-        if 'agency_cd' in oneline and not Flag:
-            break
-        if 'Data for the following sites are included:' not in oneline and Flag:
-            continue
-        if Flag:
-            Flag = False
-            continue
-        line_set = oneline.rstrip('\r\n').split(' ')
-        try:
-            site_no  = line_set[3]
-            site_name= ' '.join(line_set[4:])
-            one_site = ob_Site(site_name,site_no)
-            all_sites.append(one_site)
-        except Exception as e:
-            print e
-    return all_sites
-    
-def search_target_names(names, all_sites_list):
-    sites_ids = list()    
-    for one_site in all_sites_list:
-        if names in one_site.get_site_name():
-            sites_ids.append(one_site.get_site_no())
-    return sites_ids
-    
-
-class Site_TS_DB:
-    SiteDB = dict()
-    def __intit__(self):
-        self.SiteDB = dict()
-    def add_site(self, site_no):
-        if site_no not in self.SiteDB:
-            self.SiteDB[site_no] = dict()
-    def add_ts_v(self, site_no, var_name):
-        if var_name not in self.SiteDB[site_no]:
-            self.SiteDB[site_no][var_name] = list()            
-    def add_record(self, site_no, var_name, sample_date, sample_hours, value) :
-        self.add_site(site_no)
-        self.add_ts_v(site_no, var_name)
-        complete_date = sample_date+ " " + sample_hours
-        try:
-            timestamp = datetime.datetime.strptime(complete_date,"%Y-%m-%d %H:%M").timetuple()       
-            variable_code=var_name.lower()
-            value       = float(value)
-        #print variable_cod
-            self.SiteDB[site_no][variable_code].append((time.mktime(timestamp), value))
-        except Exception as e:
-            print e
-
-def get_raw_TS(self,site_num, var_code):
-     return self.SiteDB[site_num][var_code]
-        
-        
-def read_usgs_data(filename):
-    DB = Site_TS_DB()
-    Flag  = True
-    for oneline in open(filename,'r'):
-        if "#" == oneline[0]:
-            continue
-        if Flag:
-            head_line = oneline
-            headers = oneline.rstrip('\n').rstrip('\r').split("\t")
-            Flag    = False
-            continue 
-        if '5s' == oneline.split("\t")[0]:
-            continue
-        #print head_line
-        #print oneline        
-        item_set    = oneline.split('\t')
-        #print item_set
-        agency_id   = item_set[0]
-        site_num    = item_set[1]
-        sample_date = item_set[2]
-        sample_hours= item_set[3]
-        variable_code=item_set[12].lower()
-        value       = item_set[14]
-        try:
-            DB.add_record( site_num,  variable_code, sample_date, sample_hours, value )
-        except Exception as e:
-            print e 
-    return DB   
-
+def plot_by_site(list_of_ts):
+    pass
 
 path2usgs_data  = "../data/qwdata"
-all_sites_list  = get_site_no_mapping(path2usgs_data)
-
-DB = read_usgs_data(path2usgs_data)
-
+PROCESS_RAW_DATA_FLAG = False
+PROCESS_RAW_MAPPING   = False
 path2_structured_data = "../data/data.pickle"
-pickle.dump(DB, open(path2_structured_data, 'wb'))
+path2_site_no_mapping = "../data/mapping.pickle"
+################### loading data or processing data from file ####################################
+if PROCESS_RAW_DATA_FLAG:
+    DB = read_usgs_data(path2usgs_data)
+    pickle.dump(DB, open(path2_structured_data, 'wb'))
+else:
+    DB = pickle.load(open(path2_structured_data))
 
+
+if PROCESS_RAW_MAPPING:
+    all_sites_list  = get_site_no_mapping(path2usgs_data)
+    pickle.dump(all_sites_list, open(path2_site_no_mapping, 'wb'))
+else:
+    all_sites_list  = pickle.load(open(path2_site_no_mapping))
+test_ts = DB.get_raw_TS('01559795', '00940')
+
+##################################################################################################
+
+
+# an example of getting series from bobs creek
+bobscreek_sites = search_target_names('Bobs', all_sites_list)
 
 #TS_DB_usgs = read_usgs_data(path2usgs_data)
-
 """
 chloride_ts  = get_merged_ts(TS_DB_usgs,TS_DB_hydro,'Chloride')
 strontium_ts = get_merged_ts(TS_DB_usgs,TS_DB_hydro,'Strontium')
