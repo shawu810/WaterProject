@@ -20,7 +20,7 @@ class ob_Site:
         return self.site_name
     def get_site_no(self):
         return self.site_no
-        
+ 
    
 
 class Site_TS_DB:
@@ -40,9 +40,7 @@ class Site_TS_DB:
             timestamp = datetime.datetime.strptime(complete_date,"%Y-%m-%d %H:%M").timetuple()       
             variable_code=var_name.lower()
             value       = float(value)
-        #print variable_cod
             self.SiteDB[site_no][variable_code].append((time.mktime(timestamp), value, complete_date))
-            print 'appended'
         except Exception as e:
             print e
 
@@ -53,4 +51,7 @@ class Site_TS_DB:
             return []
         return self.SiteDB[site_num][var_code]
         
- 
+    def get_TS_from_site(self, site_num):
+        if site_num not in self.SiteDB:
+            return []
+        return self.SiteDB[site_num]
