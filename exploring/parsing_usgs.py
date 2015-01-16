@@ -31,7 +31,7 @@ def plot_one_ts(x,y,ylabel = 'ylabel', path2save=None):
     plt.show(block = False)
 
 
-def plot_by_site(site_list, var_code,  DB, label_name, show_flag = True, save_path = None ):
+def plot_by_site(site_list, var_code,  DB, label_name= '', show_flag = True, save_path = None ):
     f            = plt.figure()
     ax           = plt.gca()
     ax.set_color_cycle(['c','m','y','k','b','r','g'])
@@ -50,7 +50,7 @@ def plot_by_site(site_list, var_code,  DB, label_name, show_flag = True, save_pa
         count += len(raw_ts)
         x,y   = parser.raw_ts2xy(raw_ts)
         l     = ax.plot(x,y,'o', label= site_no)
-    plt.legend(loc='best')
+    plt.legend(loc='top left')
     if count != 0 and show_flag:
         f.show()
     if count != 0 and save_path != None:
@@ -74,7 +74,7 @@ def plot_by_site_subs(site_list, var_code,  DB):
     plt.show()
 
 
-
+global DB,all_sites_list
 
 path2usgs_data  = "../data/qwdata"
 PROCESS_RAW_DATA_FLAG = False
@@ -101,6 +101,9 @@ else:
 
 # an example of getting series from bobs creek
 bobscreek_sites, site_names = parser.search_target_names('Bobs', all_sites_list)
+def plot_by_query(oneplace,code):
+    sites, site_names = parser.search_target_names(oneplace, all_sites_list)
+    plot_by_site(sites, code, DB)
 
 
 #TS_DB_usgs = read_usgs_data(path2usgs_data)
@@ -159,69 +162,19 @@ key_words_list = ['Cross Creek','Brush Run','Bobs', 'Laurel Run', 'Jacobs Creek'
                   'Pine Creek', 'Sugar Creek','Sugar Run', 'Tenmile Creek', 'Towanda Creek',
                   ]
 path2save_figure = '../figure/'
+STOP_FLAG = True
+if STOP_FLAG:
+    import sys
+    sys.exit()
 for oneplace in key_words_list:
     sites, site_names = parser.search_target_names(oneplace, all_sites_list)
     for one_var in var_map:
         for one_code in var_map[one_var]:
             path2save = path2save_figure+oneplace.replace(" ","_")+'_'+one_var+'_'+one_code
-            plot_by_site(sites, one_code,DB, one_var+':'+one_code,False, path2save)
+            plot_by_site(sites, one_code,DB, one_var+':'+one_code,False)
         
 
 
 
 
 
-"""
-chloride_ts  = get_merged_ts(TS_DB_usgs,TS_DB_hydro,'Chloride')
-strontium_ts = get_merged_ts(TS_DB_usgs,TS_DB_hydro,'Strontium')
-Barium_ts    = get_merged_ts(TS_DB_usgs,TS_DB_hydro,'Barium')
-s_conductance_ts  = get_merged_ts(TS_DB_usgs,TS_DB_hydro,'specific conductivity')
-
-import matplotlib.pyplot as plt
-import matplotlib
-import matplotlib.dates as md
-import math
-f1 = plt.figure()
-plt.xticks(rotation = 60)
-ax  = plt.gca()
-xfmt = md.DateFormatter('%Y-%m-%d')
-ax.xaxis.set_major_formatter(xfmt)
-ax.set_yscale('log')
-plt.gcf().subplots_adjust(bottom=0.3)
-plt.ylabel('Strontium (mg/l)')
-plt.scatter(strontium_ts[0],[x/1000 for x in strontium_ts[1]])
-#plt.savefig('8a-unfiltered-recoverable.pdf', format='pdf')
-
-f2 = plt.figure()
-plt.xticks(rotation = 60)
-ax  = plt.gca()
-xfmt = md.DateFormatter('%Y-%m-%d')
-ax.xaxis.set_major_formatter(xfmt)
-plt.gcf().subplots_adjust(bottom=0.3)
-plt.ylabel('Barium (mg/l)')
-plt.scatter(Barium_ts[0],Barium_ts[1]) 
-#plt.savefig('8b.pdf', format='pdf')
-
-f3 = plt.figure()
-plt.xticks(rotation = 60)
-ax  = plt.gca()
-xfmt = md.DateFormatter('%Y-%m-%d')
-plt.gcf().subplots_adjust(bottom=0.3)
-plt.ylabel('Chloride (mg/l)')
-ax.xaxis.set_major_formatter(xfmt)
-plt.scatter(chloride_ts[0], chloride_ts[1])
-#plt.savefig('8c.pdf', format='pdf')
-
-f4 = plt.figure()
-plt.xticks(rotation = 60)
-ax  = plt.gca()
-xfmt = md.DateFormatter('%Y-%m-%d')
-plt.gcf().subplots_adjust(bottom=0.3)
-plt.ylabel('Specific Conductivity (Microsiemens per centimeter)')
-ax.xaxis.set_major_formatter(xfmt)
-plt.scatter(s_conductance_ts[0], s_conductance_ts[1])
-#plt.savefig('8d.pdf', format='pdf')
-#plt.scatter(chloride_ts[0], chloride_ts[1])
-#plt.show()
-
-"""
