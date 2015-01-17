@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import matplotlib.dates as md
 import math
-
+import Image
 
 def plot_one_ts(x,y,ylabel = 'ylabel', path2save=None):
     f= plt.figure()
@@ -31,7 +31,7 @@ def plot_one_ts(x,y,ylabel = 'ylabel', path2save=None):
     plt.show(block = False)
 
 
-def plot_by_site(site_list, var_code,  DB, label_name= '', show_flag = True, save_path = None ):
+def plot_by_site(site_list, var_code,  DB, label_name= '', show_flag = True, save_path = None, datemap = dict(), name = '' ):
     f            = plt.figure()
     ax           = plt.gca()
     ax.set_color_cycle(['c','m','y','k','b','r','g'])
@@ -43,19 +43,29 @@ def plot_by_site(site_list, var_code,  DB, label_name= '', show_flag = True, sav
     i_counter    = 0
     line_list    = []
     count = 0
+    max_value = 0
     for site_no in site_list:
         raw_ts= DB.get_raw_TS(site_no, var_code)
         if len(raw_ts) == 0:
             continue
         count += len(raw_ts)
         x,y   = parser.raw_ts2xy(raw_ts)
+        if max(y) > max_value:
+            max_value = max(y)
         l     = ax.plot(x,y,'o', label= site_no)
-    plt.legend(loc='top left')
+    if name in datemap:
+        date_x = [datetime.datetime.strptime(x,'%m/%d/%Y').timetuple() for x in datemap[name]]
+        #date_x     = dateutil.parser.parse(spill_date)
+        date_x = [datetime.datetime.fromtimestamp(time.mktime(x)).strftime('%m/%d/%Y') for x in date_x]
+        date_x = [dateutil.parser.parse(x) for x in date_x]
+        for x in date_x:
+            ax.stem([x], [max_value+1], markerfmt = '')
+    plt.legend(loc='upper left')
     if count != 0 and show_flag:
         f.show()
     if count != 0 and save_path != None:
-        f.savefig(save_path, format='pdf')
-
+        f.savefig(save_path, format='png')
+        Image.open(save_path).save(save_path+'.jpg','JPEG')
 
 def plot_by_site_subs(site_list, var_code,  DB):
     number_of_plots = len(site_list)+1
@@ -161,17 +171,20 @@ testlist = ['Cross Creek']
 key_words_list = ['Cross Creek','Brush Run','Bobs', 'Laurel Run', 'Jacobs Creek', 'Dunkle Run', 
                   'Pine Creek', 'Sugar Creek','Sugar Run', 'Tenmile Creek', 'Towanda Creek',
                   ]
-path2save_figure = '../figure/'
+key_words_date = {'Tenmile Creek': ['07/05/2011'],
+                  'Bobs': ['05/24/2010'],
+                  'Pine Creek': ['03/13/2010','03/14/2010','01/06/2012','01/15/2012']}
+path2save_figure = '../jpg_figure/'
 STOP_FLAG = True
-if STOP_FLAG:
-    import sys
-    sys.exit()
+#if STOP_FLAG:
+#    import sys
+#    sys.exit()
 for oneplace in key_words_list:
     sites, site_names = parser.search_target_names(oneplace, all_sites_list)
     for one_var in var_map:
         for one_code in var_map[one_var]:
             path2save = path2save_figure+oneplace.replace(" ","_")+'_'+one_var+'_'+one_code
-            plot_by_site(sites, one_code,DB, one_var+':'+one_code,False)
+            plot_by_site(sites, one_code,DB, one_var+':'+one_code+ ' (milligrams/L)',False,path2save, key_words_date, oneplace)
         
 
 
