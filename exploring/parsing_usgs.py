@@ -87,8 +87,8 @@ def plot_by_site_subs(site_list, var_code,  DB):
 global DB,all_sites_list
 
 path2usgs_data  = "../data/qwdata"
-PROCESS_RAW_DATA_FLAG = False
-PROCESS_RAW_MAPPING   = False
+PROCESS_RAW_DATA_FLAG = True#False
+PROCESS_RAW_MAPPING   = True#False
 path2_structured_data = "../data/data.pickle"
 path2_site_no_mapping = "../data/mapping.pickle"
 ################### loading data or processing data from file ####################################
