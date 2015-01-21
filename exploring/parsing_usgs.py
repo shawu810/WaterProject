@@ -60,11 +60,11 @@ def plot_by_site(site_list, var_code,  DB, label_name= '', show_flag = True, sav
         date_x = [dateutil.parser.parse(x) for x in date_x]
         for x in date_x:
             ax.stem([x], [max_value+1], markerfmt = '')
-    plt.legend(loc='upper left')
+    leg = plt.legend(loc='center left', bbox_to_anchor=(1,0.815))
     if count != 0 and show_flag:
         f.show()
     if count != 0 and save_path != None:
-        f.savefig(save_path, format='png')
+        f.savefig(save_path, format='png', bbox_extra_artists=(leg,), bbox_inches='tight')
         Image.open(save_path).save(save_path+'.jpg','JPEG')
 
 def plot_by_site_subs(site_list, var_code,  DB):
@@ -87,8 +87,8 @@ def plot_by_site_subs(site_list, var_code,  DB):
 global DB,all_sites_list
 
 path2usgs_data  = "../data/qwdata"
-PROCESS_RAW_DATA_FLAG = True#False
-PROCESS_RAW_MAPPING   = True#False
+PROCESS_RAW_DATA_FLAG = False
+PROCESS_RAW_MAPPING   = False
 path2_structured_data = "../data/data.pickle"
 path2_site_no_mapping = "../data/mapping.pickle"
 ################### loading data or processing data from file ####################################
