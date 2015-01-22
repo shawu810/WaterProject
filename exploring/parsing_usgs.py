@@ -23,7 +23,7 @@ def plot_one_ts(x,y,ylabel = 'ylabel', path2save=None):
     ax   = plt.gca()
     xfmt = md.DateFormatter('%Y-%m-%d')
     ax.xaxis.set_major_formatter(xfmt)
-    plt.gcf().subplots_adjust(bottom = 0.3)
+    plt.gcf().subplots_adjust(bottom = 0.3, right = 0.8)
     plt.ylabel(ylabel)
     plt.scatter(x,y)
     if path2save != None:
@@ -34,6 +34,9 @@ def plot_one_ts(x,y,ylabel = 'ylabel', path2save=None):
 def plot_by_site(site_list, var_code,  DB, label_name= '', show_flag = True, save_path = None, datemap = dict(), name = '' ):
     f            = plt.figure()
     ax           = plt.gca()
+    output_csv   = path2data+'var_code'
+    f_csv        = open(output_csv, 'w')
+    f_csv.write('site_number\t element \t time \t value \t unit \n')
     ax.set_color_cycle(['c','m','y','k','b','r','g'])
     xfmt = md.DateFormatter('%Y-%m-%d')
     ax.xaxis.set_major_formatter(xfmt)
@@ -49,10 +52,17 @@ def plot_by_site(site_list, var_code,  DB, label_name= '', show_flag = True, sav
         if len(raw_ts) == 0:
             continue
         count += len(raw_ts)
-        x,y   = parser.raw_ts2xy(raw_ts)
+        x,y   = parser.raw_ts2xy_unit_convert(raw_ts, get_convertion_number(var_code))
+        ts_length = len(x)
+        for i in range(ts_length):
+            x1 = x[i]
+            y1 = y[i]
+            line = "{}\t{}\t{}\t{}\t{}\n".format(site_no,label_name, x1, str(y1), 'mmol/L')
+            f_csv.write(line)
         if max(y) > max_value:
             max_value = max(y)
         l     = ax.plot(x,y,'o', label= site_no)
+    f_csv.close()
     if name in datemap:
         date_x = [datetime.datetime.strptime(x,'%m/%d/%Y').timetuple() for x in datemap[name]]
         #date_x     = dateutil.parser.parse(spill_date)
@@ -60,12 +70,14 @@ def plot_by_site(site_list, var_code,  DB, label_name= '', show_flag = True, sav
         date_x = [dateutil.parser.parse(x) for x in date_x]
         for x in date_x:
             ax.stem([x], [max_value+1], markerfmt = '')
+    
     leg = plt.legend(loc='center left', bbox_to_anchor=(1,0.815))
     if count != 0 and show_flag:
         f.show()
     if count != 0 and save_path != None:
         f.savefig(save_path, format='png', bbox_extra_artists=(leg,), bbox_inches='tight')
         Image.open(save_path).save(save_path+'.jpg','JPEG')
+
 
 def plot_by_site_subs(site_list, var_code,  DB):
     number_of_plots = len(site_list)+1
@@ -82,6 +94,17 @@ def plot_by_site_subs(site_list, var_code,  DB):
         i_counter += 1
     axarr[i_counter].scatter(aggregated_x,aggregated_y)
     plt.show()
+
+
+def get_convertion_number(number):
+    for key in var_map.keys():
+        if number in var_map[key]:
+            if key in atomic_weight_map:
+                return atomic_weight_map[key]
+            else:
+                return 10**3
+    return 10**3 # not a chemical element
+   
 
 
 global DB,all_sites_list
@@ -111,11 +134,12 @@ else:
 
 # an example of getting series from bobs creek
 bobscreek_sites, site_names = parser.search_target_names('Bobs', all_sites_list)
-def plot_by_query(oneplace,code):
+def plot_by_query(oneplace,code, ylabel):
     sites, site_names = parser.search_target_names(oneplace, all_sites_list)
-    plot_by_site(sites, code, DB)
+    plot_by_site(sites, code, DB, ylabel, True, None, key_words_date, oneplace)
 
-
+print "use this to plot:  "
+print 'plot_by_query(oneplace, code)'
 #TS_DB_usgs = read_usgs_data(path2usgs_data)
 
 #################################################################################################
@@ -154,6 +178,7 @@ def plot_by_query(oneplace,code):
 #  00945  - Sulfate, water, filtered, milligrams per liter
 #  00946  - Sulfate, water, unfiltered, milligrams per liter
 ##############################################################################
+global key_words_date, var_map, atomic_weight_map
 var_map = {'cl':['00940','91001','99220'], 
            'br':['71870','91000'],
            'na':['91053','00929','00930'],
@@ -167,6 +192,17 @@ var_map = {'cl':['00940','91001','99220'],
            'ph':['00400', '00403'],
            'alkalinity':['39036','39086','39087'],
            's':['00945','00946']}
+
+atomic_weight_map = {'cl': 35.45, 
+                     'br': 79.9,
+                     'na': 22.98,
+                     'k' : 39.09,
+                     'ca': 40.078,
+                     'mg': 24.3,
+                     'ba': 137.32,
+                     'fe': 55.84,
+                     'mn': 54.94}
+
 testlist = ['Cross Creek']
 key_words_list = ['Cross Creek','Brush Run','Bobs', 'Laurel Run', 'Jacobs Creek', 'Dunkle Run', 
                   'Pine Creek', 'Sugar Creek','Sugar Run', 'Tenmile Creek', 'Towanda Creek',
@@ -175,16 +211,17 @@ key_words_date = {'Tenmile Creek': ['07/05/2011'],
                   'Bobs': ['05/24/2010'],
                   'Pine Creek': ['03/13/2010','03/14/2010','01/06/2012','01/15/2012']}
 path2save_figure = '../jpg_figure/'
+path2data        = '../spill_figure/'
 STOP_FLAG = True
-#if STOP_FLAG:
-#    import sys
-#    sys.exit()
+if STOP_FLAG:
+    import sys
+    sys.exit()
 for oneplace in key_words_list:
     sites, site_names = parser.search_target_names(oneplace, all_sites_list)
     for one_var in var_map:
         for one_code in var_map[one_var]:
             path2save = path2save_figure+oneplace.replace(" ","_")+'_'+one_var+'_'+one_code
-            plot_by_site(sites, one_code,DB, one_var+':'+one_code+ ' (milligrams/L)',False,path2save, key_words_date, oneplace)
+            plot_by_site(sites, one_code,DB, one_var+ ' : '+one_code+ ' (mmol/L)',False,path2save, key_words_date, oneplace)
         
 
 

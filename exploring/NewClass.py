@@ -21,7 +21,17 @@ class ob_Site:
     def get_site_no(self):
         return self.site_no
  
-   
+class Point:
+    def __init__(self,site_no, site_name, lat, lon):
+        self.site_no     = site_no
+        self.site_name   = site_name
+        try:
+            self.lat = float(lat)
+            self.lon = float(lon)
+        except Exception as e:
+            print e 
+            print lat
+            print lon
 
 class Site_TS_DB:
     def __init__(self, SiteDB=None):
