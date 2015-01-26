@@ -136,6 +136,8 @@ else:
 bobscreek_sites, site_names = parser.search_target_names('Bobs', all_sites_list)
 def plot_by_query(oneplace,code, ylabel):
     sites, site_names = parser.search_target_names(oneplace, all_sites_list)
+    if oneplace == "Pine Creek":
+        sites = ['01548500','01549600','01549700','03036240','01471805','01548235']
     plot_by_site(sites, code, DB, ylabel, True, None, key_words_date, oneplace)
 
 print "use this to plot:  "
