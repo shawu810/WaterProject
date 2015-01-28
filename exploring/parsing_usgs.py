@@ -207,14 +207,17 @@ atomic_weight_map = {'cl': 35.45,
 
 testlist = ['Cross Creek']
 key_words_list = ['Cross Creek','Brush Run','Bobs', 'Laurel Run', 'Jacobs Creek', 'Dunkle Run', 
-                  'Pine Creek', 'Sugar Creek','Sugar Run', 'Tenmile Creek', 'Towanda Creek',
+                  'Pine Creek', 'Sugar Creek','Sugar Run', 'Tenmile Creek', 'Towanda Creek', 'Larrys Creek','Brush Creek'
                   ]
 key_words_date = {'Tenmile Creek': ['07/05/2011'],
                   'Bobs': ['05/24/2010'],
-                  'Pine Creek': ['03/13/2010','03/14/2010','01/06/2012','01/15/2012']}
+                  'Pine Creek': ['03/13/2010','03/14/2010','01/06/2012','01/15/2012'],
+                  'Larrys Creek': ['10/01/2011'],
+                  'Towanda Creek': ['05/01/2011'],
+                  'Brush Creek': ['09/13/2011']}
 path2save_figure = '../jpg_figure/'
 path2data        = '../spill_figure/'
-STOP_FLAG = True
+STOP_FLAG = False
 if STOP_FLAG:
     import sys
     sys.exit()
